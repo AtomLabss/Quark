@@ -26,7 +26,7 @@ local function createWebhook(player)
 	end
 end
 
-local function sendMessage(webhookURL, message)
+local function sendMessage(webhookURL, message, player)
 	local payload = {
 		content = message
 	}
@@ -50,7 +50,7 @@ local function onPlayerChat(player, message)
 
 	local webhookURL = quarkWebhooks[player.UserId];
 	if webhookURL then
-		sendMessage(webhookURL, message);
+		sendMessage(webhookURL, message, player);
 	end
 end
 
