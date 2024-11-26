@@ -11,20 +11,16 @@ const discordAPIBase = process.env.DISCORD_API_BASE;
 const port = process.env.PORT || 80;
 
 app.post('/createWebhook', async (req, res) => {
-    const { username, userID, channelID } = req.body;
+    const { username, userID, channelID, avatar_url } = req.body;
 
     if (!username || !channelID || !userID) {
         return res.status(400).json({ error: 'Missing variables!' });
     }
 
     try {
-        const avatarResponse = await axios.get(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userID}&size=420x420&format=Png&isCircular=false`);
-        const avatarData = avatarResponse.data;
-        const finalAvatarUrl = avatarData.data[0]?.imageUrl;
-
         const response = await axios.post(
             `${discordAPIBase}/channels/${channelID}/webhooks`,
-            { name: username, avatar: finalAvatarUrl },
+            { name: username, avatar: avatar_url },  // avatar url from roblok rela
             {
                 headers: {
                     Authorization: `Bot ${token}`,
