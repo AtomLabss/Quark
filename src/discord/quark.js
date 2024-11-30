@@ -5,19 +5,36 @@ const { join } = require('path');
 if (!existsSync(join(process.cwd(), 'node_modules'))) {
     console.log('Installing dependencies, please wait...');
     execSync('npm init -y', { stdio: 'inherit' });
-    execSync('npm install express axios dotenv', { stdio: 'inherit' });
+    execSync('npm install express axios dotenv discord.js', { stdio: 'inherit' });
 }
 
 const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
+const {
+    ActivityType,
+    Client,
+    GatewayIntentBits,
+} = require('discord.js');
 
 const app = express();
 app.use(express.json());
 dotenv.config();
 
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+});
+
+client.once('ready', () => {
+    console.log('Quark is connected to Discord and is ready!');
+
+    client.user.setPresence({
+        activities: [{ name: '/help | atomlabs.ie', type: ActivityType.Playing }],
+        status: 'online',
+    });
+});
+
 const token = process.env.TOKEN;
-const discordAPIBase = process.env.DISCORD_API_BASE;
 const port = process.env.PORT || 80;
 
 async function getBase64FromUrl(userId) {
@@ -50,29 +67,26 @@ app.post('/createWebhook', async (req, res) => {
     }
 
     try {
-        const webhookData = { name: username };
         const base64Avatar = await getBase64FromUrl(userID);
-        
+        let avatarData;
+
         if (base64Avatar) {
-            webhookData.avatar = `data:image/png;base64,${base64Avatar}`;
+            avatarData = `data:image/png;base64,${base64Avatar}`;
         }
 
-        const response = await axios.post(
-            `${discordAPIBase}/channels/${channelID}/webhooks`,
-            webhookData,
-            {
-                headers: {
-                    Authorization: `Bot ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
+        const channel = await client.channels.fetch(channelID);
+        const webhook = await channel.createWebhook({
+            name: username,
+            avatar: avatarData,
+            reason: `Webhook created for a Roblox user by the name of '${username}'.`
+        });
 
-        res.status(200).json({ url: `${discordAPIBase}/webhooks/${response.data.id}/${response.data.token}` });
+        res.status(200).json({ url: webhook.url });
     } catch (error) {
         console.error('Error creating webhook:', error);
         res.status(500).json({ error: error.response?.data || error.message });
     }
 });
 
-app.listen(port, () => console.log(`Quark is running on port ${port}!`));
+app.listen(port, () => console.log(`QuarkAPI is running on port ${port}!`));
+client.login(token);
