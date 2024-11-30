@@ -3,7 +3,7 @@ const { existsSync } = require('fs');
 const { join } = require('path');
 
 if (!existsSync(join(process.cwd(), 'node_modules'))) {
-    console.log('Installing dependencies...');
+    console.log('Installing dependencies, please wait...');
     execSync('npm init -y', { stdio: 'inherit' });
     execSync('npm install express axios dotenv', { stdio: 'inherit' });
 }
